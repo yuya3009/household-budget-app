@@ -7,6 +7,8 @@ repos:
       - id: check-merge-conflict
       - id: check-yaml
       - id: check-json
+        # tsconfig はコメントを許す JSONC 形式のため除外する
+        exclude: (^|/)tsconfig[^/]*\.json$
       - id: trailing-whitespace
       - id: end-of-file-fixer
 
