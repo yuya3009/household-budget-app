@@ -1,0 +1,40 @@
+name: Static Analysis
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      # ソースコード未作成の間は解析をスキップする
+      - name: Check for source code
+        id: src
+        run: |
+          if [ -d src ] && [ -n "$(find src -type f \( -name '*.js' -o -name '*.jsx' -o -name '*.ts' -o -name '*.tsx' \) -print -quit)" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "No source files under src/. Skipping static analysis."
+          fi
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        if: steps.src.outputs.exists == 'true'
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        if: steps.src.outputs.exists == 'true'
+        run: npm ci
+
+      - name: ESLint
+        if: steps.src.outputs.exists == 'true'
+        run: npm run lint
+
+      - name: Type check
+        if: steps.src.outputs.exists == 'true' && always()
+        run: npm run typecheck
